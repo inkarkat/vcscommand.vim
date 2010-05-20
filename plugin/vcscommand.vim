@@ -1281,6 +1281,14 @@ function! VCSCommandGetStatusLine()
 	endif
 endfunction
 
+function! VCSCommandSetVCSType(type)
+	if exists('b:VCSCommandBufferSetup')
+		unlet b:VCSCommandBufferSetup
+	endif
+	let b:VCSCommandVCSType = a:type
+	call s:SetupBuffer()
+endfunction
+
 " Section: Command definitions {{{1
 " Section: Primary commands {{{2
 com! -nargs=* VCSAdd call s:MarkOrigBufferForSetup(s:ExecuteVCSCommand('Add', [<f-args>]))
