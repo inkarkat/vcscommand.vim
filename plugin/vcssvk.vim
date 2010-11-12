@@ -63,7 +63,7 @@ let s:svkFunctions = {}
 " Returns the executable used to invoke SVK suitable for use in a shell
 " command.
 function! s:Executable()
-	return shellescape(VCSCommandGetOption('VCSCommandSVKExec', 'svk'))
+	return VCSCommandGetOption('VCSCommandSVKExec', 'svk')
 endfunction
 
 " Function: s:DoCommand(cmd, cmdName, statusText, options) {{{2
