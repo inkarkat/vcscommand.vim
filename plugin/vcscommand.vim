@@ -272,6 +272,13 @@
 "   full file name of a given buffer.  If it matches, the second element will
 "   be used as the VCS type.
 "
+" VCSCommandVCSTypePreference
+"   This variable allows the VCS type detection to be weighted towards
+"   a specific VCS, in case more than one potential VCS is detected as useable.
+"   The format of the variable is a string containing the abbreviations of the
+"   preferred VCS types, separated by spaces. eg: 'git bzr cvs'. When there is
+"   ambiguity as to which VCS should be used.
+"
 " Event documentation {{{2
 "   For additional customization, VCSCommand.vim uses User event autocommand
 "   hooks.  Each event is in the VCSCommand group, and different patterns
@@ -1062,6 +1069,17 @@ function! VCSCommandGetVCSType(buffer)
 	elseif len(matches) == 0
 		throw 'No suitable plugin'
 	else
+               if exists("g:VCSCommandVCSTypePreference")
+                       for preferred in split(g:VCSCommandVCSTypePreference, '\W\+')
+                               echo preferred
+                               for vcsType in matches
+                                       if toupper(vcsType) == toupper(preferred)
+                                               call setbufvar(a:buffer, 'VCSCommandVCSType', vcsType)
+                                               return vcsType
+                                       endif
+                               endfor
+                       endfor
+               endif
 		throw 'Too many matching VCS:  ' . join(matches)
 	endif
 endfunction
