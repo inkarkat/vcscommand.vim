@@ -122,7 +122,7 @@ function! s:svkFunctions.Annotate(argList)
 
 	let resultBuffer = s:DoCommand('blame' . options, 'annotate', caption, {})
 	if resultBuffer > 0
-		normal 1G2dd
+		normal! 1G2dd
 	endif
 	return resultBuffer
 endfunction

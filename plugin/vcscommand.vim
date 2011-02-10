@@ -434,7 +434,7 @@ function! s:ExecuteExtensionMapping(mapping)
 	if !has_key(s:plugins[vcsType][2], a:mapping)
 		throw 'This extended mapping is not defined for ' . vcsType
 	endif
-	silent execute 'normal' ':' .  s:plugins[vcsType][2][a:mapping] . "\<CR>"
+	silent execute 'normal!' ':' .  s:plugins[vcsType][2][a:mapping] . "\<CR>"
 endfunction
 
 " Function: s:ExecuteVCSCommand(command, argList) {{{2
@@ -740,12 +740,12 @@ function! s:VCSAnnotate(bang, ...)
 			endif
 			let originalFileType = getbufvar(originalBuffer, '&ft')
 			let annotateFileType = getbufvar(annotateBuffer, '&ft')
-			execute "normal 0zR\<c-v>G/" . splitRegex . "/e\<cr>d"
+			execute "normal! 0zR\<c-v>G/" . splitRegex . "/e\<cr>d"
 			call setbufvar('%', '&filetype', getbufvar(originalBuffer, '&filetype'))
 			set scrollbind
 			leftabove vert new
-			normal 0P
-			execute "normal" . col('$') . "\<c-w>|"
+			normal! 0P
+			execute "normal!" . col('$') . "\<c-w>|"
 			call s:SetupScratchBuffer('annotate', vcsType, originalBuffer, 'header')
 			wincmd l
 		endif
@@ -757,12 +757,12 @@ function! s:VCSAnnotate(bang, ...)
 				" No argument list means that we're annotating
 				" the current version, so jumping to the same
 				" line is the expected action.
-				execute "normal" line . 'G'
+				execute "normal!" line . 'G'
 				if has('folding')
 					" The execution of the buffer created autocommand
 					" re-folds the buffer.  Display the current line
 					" unfolded.
-					normal zv
+					normal! zv
 				endif
 			endif
 		endif
@@ -983,7 +983,7 @@ function! s:VCSVimDiff(...)
 								\ . '|call setbufvar('.originalBuffer.', ''&foldlevel'', '''.getbufvar(originalBuffer, '&foldlevel').''')'
 								\ . '|call setbufvar('.originalBuffer.', ''&scrollbind'', '.getbufvar(originalBuffer, '&scrollbind').')'
 								\ . '|call setbufvar('.originalBuffer.', ''&wrap'', '.getbufvar(originalBuffer, '&wrap').')'
-								\ . '|if &foldmethod==''manual''|execute ''normal zE''|endif'
+								\ . '|if &foldmethod==''manual''|execute ''normal! zE''|endif'
 					diffthis
 					wincmd w
 				else
@@ -1204,7 +1204,7 @@ function! VCSCommandDoCommand(cmd, cmdName, statusText, options)
 	" within a fold, but I prefer to simply unfold the result buffer altogether.
 
 	if has('folding')
-		normal zR
+		normal! zR
 	endif
 
 	$d
