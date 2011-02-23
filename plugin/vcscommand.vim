@@ -376,6 +376,9 @@ function! s:VCSCommandUtility.system(...)
 		set sxq=\"
 	endif
 	try
+		if exists('*iconv')
+			return iconv(call('system', a:000), &tenc, &enc)
+		endif
 		return call('system', a:000)
 	finally
 		if exists("save_sxq")
