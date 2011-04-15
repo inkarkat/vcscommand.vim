@@ -112,8 +112,8 @@ function! s:hgFunctions.Annotate(argList)
 	if len(a:argList) == 0
 		if &filetype == 'HGannotate'
 			" Perform annotation of the version indicated by the current line.
-			let caption = matchstr(getline('.'),'\v^\s+\zs\d+')
-			let options = ' -r' . caption
+			let caption = matchstr(getline('.'),'\v^\s*\w+\s+\zs\d+')
+			let options = ' -un -r' . caption
 		else
 			let caption = ''
 			let options = ' -un'
