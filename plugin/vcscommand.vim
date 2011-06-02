@@ -1114,6 +1114,7 @@ endfunction
 function! VCSCommandRegisterModule(name, path, commandMap, mappingMap)
 	let s:plugins[a:name] = [a:path, a:commandMap, a:mappingMap]
 	if !empty(a:mappingMap)
+				\ && !exists("g:no_plugin_maps")
 				\ && !VCSCommandGetOption('VCSCommandDisableMappings', 0)
 				\ && !VCSCommandGetOption('VCSCommandDisableExtensionMappings', 0)
 		for shortcut in keys(a:mappingMap)
@@ -1321,23 +1322,25 @@ com! VCSCommandEnableBufferSetup call VCSCommandEnableBufferSetup()
 com! VCSReload let savedPlugins = s:plugins|let s:plugins = {}|call s:ClearMenu()|unlet! g:loaded_VCSCommand|runtime plugin/vcscommand.vim|for plugin in values(savedPlugins)|execute 'source' plugin[0]|endfor|unlet savedPlugins
 
 " Section: Plugin command mappings {{{1
-nnoremap <silent> <Plug>VCSAdd :VCSAdd<CR>
-nnoremap <silent> <Plug>VCSAnnotate :VCSAnnotate<CR>
-nnoremap <silent> <Plug>VCSCommit :VCSCommit<CR>
-nnoremap <silent> <Plug>VCSDelete :VCSDelete<CR>
-nnoremap <silent> <Plug>VCSDiff :VCSDiff<CR>
-nnoremap <silent> <Plug>VCSGotoOriginal :VCSGotoOriginal<CR>
-nnoremap <silent> <Plug>VCSClearAndGotoOriginal :VCSGotoOriginal!<CR>
-nnoremap <silent> <Plug>VCSInfo :VCSInfo<CR>
-nnoremap <silent> <Plug>VCSLock :VCSLock<CR>
-nnoremap <silent> <Plug>VCSLog :VCSLog<CR>
-nnoremap <silent> <Plug>VCSRevert :VCSRevert<CR>
-nnoremap <silent> <Plug>VCSReview :VCSReview<CR>
-nnoremap <silent> <Plug>VCSSplitAnnotate :VCSAnnotate!<CR>
-nnoremap <silent> <Plug>VCSStatus :VCSStatus<CR>
-nnoremap <silent> <Plug>VCSUnlock :VCSUnlock<CR>
-nnoremap <silent> <Plug>VCSUpdate :VCSUpdate<CR>
-nnoremap <silent> <Plug>VCSVimDiff :VCSVimDiff<CR>
+if !exists("no_plugin_maps")
+	nnoremap <silent> <Plug>VCSAdd :VCSAdd<CR>
+	nnoremap <silent> <Plug>VCSAnnotate :VCSAnnotate<CR>
+	nnoremap <silent> <Plug>VCSCommit :VCSCommit<CR>
+	nnoremap <silent> <Plug>VCSDelete :VCSDelete<CR>
+	nnoremap <silent> <Plug>VCSDiff :VCSDiff<CR>
+	nnoremap <silent> <Plug>VCSGotoOriginal :VCSGotoOriginal<CR>
+	nnoremap <silent> <Plug>VCSClearAndGotoOriginal :VCSGotoOriginal!<CR>
+	nnoremap <silent> <Plug>VCSInfo :VCSInfo<CR>
+	nnoremap <silent> <Plug>VCSLock :VCSLock<CR>
+	nnoremap <silent> <Plug>VCSLog :VCSLog<CR>
+	nnoremap <silent> <Plug>VCSRevert :VCSRevert<CR>
+	nnoremap <silent> <Plug>VCSReview :VCSReview<CR>
+	nnoremap <silent> <Plug>VCSSplitAnnotate :VCSAnnotate!<CR>
+	nnoremap <silent> <Plug>VCSStatus :VCSStatus<CR>
+	nnoremap <silent> <Plug>VCSUnlock :VCSUnlock<CR>
+	nnoremap <silent> <Plug>VCSUpdate :VCSUpdate<CR>
+	nnoremap <silent> <Plug>VCSVimDiff :VCSVimDiff<CR>
+endif
 
 " Section: Default mappings {{{1
 
@@ -1361,7 +1364,7 @@ let s:defaultMappings = [
 			\['v', 'VCSVimDiff'],
 			\]
 
-if !VCSCommandGetOption('VCSCommandDisableMappings', 0)
+if !exists("g:no_plugin_maps") && !VCSCommandGetOption('VCSCommandDisableMappings', 0)
 	for [s:shortcut, s:vcsFunction] in VCSCommandGetOption('VCSCommandMappings', s:defaultMappings)
 		call s:CreateMapping(s:shortcut, '<Plug>' . s:vcsFunction, '''' . s:vcsFunction . '''')
 	endfor
