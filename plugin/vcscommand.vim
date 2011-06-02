@@ -748,7 +748,7 @@ function! s:VCSAnnotate(bang, ...)
 			set scrollbind
 			leftabove vert new
 			normal! 0P
-			execute "normal!" . col('$') . "\<c-w>|"
+			execute "normal!" . (col('$') + (&number ? &numberwidth : 0)). "\<c-w>|"
 			call s:SetupScratchBuffer('annotate', vcsType, originalBuffer, 'header')
 			wincmd l
 		endif
