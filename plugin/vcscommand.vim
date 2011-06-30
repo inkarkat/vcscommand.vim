@@ -1074,7 +1074,11 @@ function! VCSCommandChdir(directory)
 	if exists("*haslocaldir") && haslocaldir()
 		let command = 'lcd'
 	endif
-	execute command fnameescape(a:directory)
+	if exists("*fnameescape")
+		execute command fnameescape(a:directory)
+	else
+		execute command escape(a:directory, ' ')
+	endif
 endfunction
 
 " Function: VCSCommandChangeToCurrentFileDir() {{{2
