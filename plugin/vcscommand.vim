@@ -1071,7 +1071,6 @@ function! VCSCommandGetVCSType(buffer)
 	else
 		if exists("g:VCSCommandVCSTypePreference")
 			for preferred in split(g:VCSCommandVCSTypePreference, '\W\+')
-				echo preferred
 				for vcsType in matches
 					if toupper(vcsType) == toupper(preferred)
 						call setbufvar(a:buffer, 'VCSCommandVCSType', vcsType)
