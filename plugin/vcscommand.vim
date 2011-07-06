@@ -1069,8 +1069,9 @@ function! VCSCommandGetVCSType(buffer)
 	elseif len(matches) == 0
 		throw 'No suitable plugin'
 	else
-		if exists("g:VCSCommandVCSTypePreference")
-			for preferred in split(g:VCSCommandVCSTypePreference, '\W\+')
+		let preferences = VCSCommandGetOption("VCSCommandVCSTypePreference", "")
+		if len(preferences) > 0
+			for preferred in split(preferences, '\W\+')
 				for vcsType in matches
 					if toupper(vcsType) == toupper(preferred)
 						call setbufvar(a:buffer, 'VCSCommandVCSType', vcsType)
