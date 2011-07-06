@@ -1069,17 +1069,17 @@ function! VCSCommandGetVCSType(buffer)
 	elseif len(matches) == 0
 		throw 'No suitable plugin'
 	else
-               if exists("g:VCSCommandVCSTypePreference")
-                       for preferred in split(g:VCSCommandVCSTypePreference, '\W\+')
-                               echo preferred
-                               for vcsType in matches
-                                       if toupper(vcsType) == toupper(preferred)
-                                               call setbufvar(a:buffer, 'VCSCommandVCSType', vcsType)
-                                               return vcsType
-                                       endif
-                               endfor
-                       endfor
-               endif
+		if exists("g:VCSCommandVCSTypePreference")
+			for preferred in split(g:VCSCommandVCSTypePreference, '\W\+')
+				echo preferred
+				for vcsType in matches
+					if toupper(vcsType) == toupper(preferred)
+						call setbufvar(a:buffer, 'VCSCommandVCSType', vcsType)
+						return vcsType
+					endif
+				endfor
+			endfor
+		endif
 		throw 'Too many matching VCS:  ' . join(matches)
 	endif
 endfunction
