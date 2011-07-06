@@ -1073,7 +1073,7 @@ function! VCSCommandGetVCSType(buffer)
 		if len(preferences) > 0
 			for preferred in split(preferences, '\W\+')
 				for vcsType in matches
-					if toupper(vcsType) == toupper(preferred)
+					if vcsType ==? preferred
 						call setbufvar(a:buffer, 'VCSCommandVCSType', vcsType)
 						return vcsType
 					endif
