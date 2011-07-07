@@ -569,33 +569,39 @@ function!  s:IdentifyVCSType(buffer)
 		endfor
 	endif
 	let matches = []
+	let exactMatch = ''
+	let exactMatchCount = 0
 	for vcsType in keys(s:plugins)
 		let identified = s:plugins[vcsType][1].Identify(a:buffer)
 		if identified
 			if identified == g:VCSCOMMAND_IDENTIFY_EXACT
-				let matches = [vcsType]
-				break
-			else
-				let matches += [vcsType]
+				let exactMatch = vcsType
+				let exactMatchCount += 1
 			endif
+			call add(matches, [vcsType, identified])
 		endif
 	endfor
 	if len(matches) == 1
-		return matches[0]
+		return matches[0][0]
 	elseif len(matches) == 0
 		throw 'No suitable plugin'
 	else
 		let preferences = VCSCommandGetOption("VCSCommandVCSTypePreference", "")
 		if len(preferences) > 0
 			for preferred in split(preferences, '\W\+')
-				for vcsType in matches
+				for [vcsType, identified] in matches
 					if vcsType ==? preferred
 						return vcsType
 					endif
 				endfor
 			endfor
 		endif
-		throw 'Too many matching VCS:  ' . join(matches)
+
+		if exactMatchCount == 1
+			return exactMatch
+		endif
+
+		throw 'can''t identify VCS type for current buffer due to too many matching VCS:  ' . join(map(matches, 'v:val[0]'))
 	endif
 endfunction
 
@@ -1084,9 +1090,9 @@ endfunction
 " Rules for determining type:
 "   1. use previously-cached value
 "   2. use value from 'VCSCommandVCSTypeOverride'
-"   3. use first exact match found
-"   4. use single inexact match found
-"   5. use first matching value from 'VCSCommandTypePreference'
+"   3. use single match 
+"   4. use first matching value from 'VCSCommandTypePreference'
+"   5. use single exact match
 "   6. error if multiple matching types
 "   7. error if no matching types
 
