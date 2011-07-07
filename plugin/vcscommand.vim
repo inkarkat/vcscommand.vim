@@ -275,9 +275,9 @@
 " VCSCommandVCSTypePreference
 "   This variable allows the VCS type detection to be weighted towards
 "   a specific VCS, in case more than one potential VCS is detected as useable.
-"   The format of the variable is a string containing the abbreviations of the
-"   preferred VCS types, separated by spaces. eg: 'git bzr cvs'. When there is
-"   ambiguity as to which VCS should be used.
+"   The format of the variable is either a list or a space-separated string
+"   containing the abbreviations of the preferred VCS types. eg: 'git bzr
+"   cvs'. When there is ambiguity as to which VCS should be used.
 "
 " Event documentation {{{2
 "   For additional customization, VCSCommand.vim uses User event autocommand
@@ -586,9 +586,14 @@ function!  s:IdentifyVCSType(buffer)
 	elseif len(matches) == 0
 		throw 'No suitable plugin'
 	else
-		let preferences = VCSCommandGetOption("VCSCommandVCSTypePreference", "")
+		let preferences = VCSCommandGetOption("VCSCommandVCSTypePreference", [])
 		if len(preferences) > 0
-			for preferred in split(preferences, '\W\+')
+			if type(preferences) == 1
+				let listPreferences = split(preferences, '\W\+')
+				unlet preferences
+				let preferences = listPreferences
+			endif
+			for preferred in preferences
 				for [vcsType, identified] in matches
 					if vcsType ==? preferred
 						return vcsType
