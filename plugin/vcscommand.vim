@@ -552,6 +552,53 @@ function! s:EditFile(command, originalBuffer, statusText)
 	endtry
 endfunction
 
+" Function:  s:IdentifyVCSType() {{{2
+" This function implements the non-cached identification strategy for
+" VcsCommandGetVCSType().
+"
+" Returns:  VCS type name identified for the given buffer; an exception is
+" thrown in case no type can be identified.
+
+function!  s:IdentifyVCSType(buffer)
+	if exists("g:VCSCommandVCSTypeOverride")
+		let fullpath = fnamemodify(bufname(a:buffer), ':p')
+		for [path, vcsType] in g:VCSCommandVCSTypeOverride
+			if match(fullpath, path) > -1
+				return vcsType
+			endif
+		endfor
+	endif
+	let matches = []
+	for vcsType in keys(s:plugins)
+		let identified = s:plugins[vcsType][1].Identify(a:buffer)
+		if identified
+			if identified == g:VCSCOMMAND_IDENTIFY_EXACT
+				let matches = [vcsType]
+				break
+			else
+				let matches += [vcsType]
+			endif
+		endif
+	endfor
+	if len(matches) == 1
+		return matches[0]
+	elseif len(matches) == 0
+		throw 'No suitable plugin'
+	else
+		let preferences = VCSCommandGetOption("VCSCommandVCSTypePreference", "")
+		if len(preferences) > 0
+			for preferred in split(preferences, '\W\+')
+				for vcsType in matches
+					if vcsType ==? preferred
+						return vcsType
+					endif
+				endfor
+			endfor
+		endif
+		throw 'Too many matching VCS:  ' . join(matches)
+	endif
+endfunction
+
 " Function: s:SetupScratchBuffer(command, vcsType, originalBuffer, statusText) {{{2
 " Creates convenience buffer variables and the name of a vcscommand result
 " buffer.
@@ -1028,60 +1075,28 @@ endfunction
 " Section: Public functions {{{1
 
 " Function: VCSCommandGetVCSType() {{{2
-" Sets the b:VCSCommandVCSType variable in the given buffer to the
-" appropriate source control system name.
+" This function sets the b:VCSCommandVCSType variable in the given buffer to the
+" appropriate source control system name and returns the same name.
 "
-" This uses the Identify extension function to test the buffer.  If the
-" Identify function returns VCSCOMMAND_IDENTIFY_EXACT, the match is considered
-" exact.  If the Identify function returns VCSCOMMAND_IDENTIFY_INEXACT, the
-" match is considered inexact, and is only applied if no exact match is found.
-" Multiple inexact matches is currently considered an error.
+" Returns:  VCS type name identified for the given buffer.  An exception is
+" thrown if no type can be identified.
+"
+" Rules for determining type:
+"   1. use previously-cached value
+"   2. use value from 'VCSCommandVCSTypeOverride'
+"   3. use first exact match found
+"   4. use single inexact match found
+"   5. use first matching value from 'VCSCommandTypePreference'
+"   6. error if multiple matching types
+"   7. error if no matching types
 
 function! VCSCommandGetVCSType(buffer)
 	let vcsType = getbufvar(a:buffer, 'VCSCommandVCSType')
-	if strlen(vcsType) > 0
-		return vcsType
+	if strlen(vcsType) == 0
+		let vcsType = s:IdentifyVCSType(a:buffer)
+		call setbufvar(a:buffer, 'VCSCommandVCSType', vcsType)
 	endif
-	if exists("g:VCSCommandVCSTypeOverride")
-		let fullpath = fnamemodify(bufname(a:buffer), ':p')
-		for [path, vcsType] in g:VCSCommandVCSTypeOverride
-			if match(fullpath, path) > -1
-				call setbufvar(a:buffer, 'VCSCommandVCSType', vcsType)
-				return vcsType
-			endif
-		endfor
-	endif
-	let matches = []
-	for vcsType in keys(s:plugins)
-		let identified = s:plugins[vcsType][1].Identify(a:buffer)
-		if identified
-			if identified == g:VCSCOMMAND_IDENTIFY_EXACT
-				let matches = [vcsType]
-				break
-			else
-				let matches += [vcsType]
-			endif
-		endif
-	endfor
-	if len(matches) == 1
-		call setbufvar(a:buffer, 'VCSCommandVCSType', matches[0])
-		return matches[0]
-	elseif len(matches) == 0
-		throw 'No suitable plugin'
-	else
-		let preferences = VCSCommandGetOption("VCSCommandVCSTypePreference", "")
-		if len(preferences) > 0
-			for preferred in split(preferences, '\W\+')
-				for vcsType in matches
-					if vcsType ==? preferred
-						call setbufvar(a:buffer, 'VCSCommandVCSType', vcsType)
-						return vcsType
-					endif
-				endfor
-			endfor
-		endif
-		throw 'Too many matching VCS:  ' . join(matches)
-	endif
+	return vcsType
 endfunction
 
 " Function: VCSCommandChdir(directory) {{{2
