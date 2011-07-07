@@ -1102,10 +1102,13 @@ endfunction
 "   7. error if no matching types
 
 function! VCSCommandGetVCSType(buffer)
-	let vcsType = getbufvar(a:buffer, 'VCSCommandVCSType')
-	if strlen(vcsType) == 0
-		let vcsType = s:IdentifyVCSType(a:buffer)
-		call setbufvar(a:buffer, 'VCSCommandVCSType', vcsType)
+	let vcsType = VCSCommandGetOption('VCSCommandVCSTypeExplicitOverride', '')
+	if len(vcsType) == 0
+		let vcsType = getbufvar(a:buffer, 'VCSCommandVCSType')
+		if strlen(vcsType) == 0
+			let vcsType = s:IdentifyVCSType(a:buffer)
+			call setbufvar(a:buffer, 'VCSCommandVCSType', vcsType)
+		endif
 	endif
 	return vcsType
 endfunction
