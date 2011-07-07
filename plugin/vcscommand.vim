@@ -273,11 +273,11 @@
 "   be used as the VCS type.
 "
 " VCSCommandVCSTypePreference
-"   This variable allows the VCS type detection to be weighted towards
-"   a specific VCS, in case more than one potential VCS is detected as useable.
+"   This variable allows the VCS type detection to be weighted towards a
+"   specific VCS, in case more than one potential VCS is detected as useable.
 "   The format of the variable is either a list or a space-separated string
-"   containing the abbreviations of the preferred VCS types. eg: 'git bzr
-"   cvs'. When there is ambiguity as to which VCS should be used.
+"   containing the ordered-by-preference abbreviations of the preferred VCS
+"   types.
 "
 " Event documentation {{{2
 "   For additional customization, VCSCommand.vim uses User event autocommand
