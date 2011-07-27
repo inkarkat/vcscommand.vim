@@ -104,7 +104,7 @@ endfunction
 " Function: s:svkFunctions.Annotate(argList) {{{2
 function! s:svkFunctions.Annotate(argList)
 	if len(a:argList) == 0
-		if &filetype == 'SVKannotate'
+		if &filetype ==? 'svkannotate'
 			" Perform annotation of the version indicated by the current line.
 			let caption = matchstr(getline('.'),'\v^\s+\zs\d+')
 			let options = ' -r' . caption
