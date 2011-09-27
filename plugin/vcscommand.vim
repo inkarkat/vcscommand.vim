@@ -360,6 +360,9 @@ let s:plugins = {}
 " temporary values of overridden configuration variables
 let s:optionOverrides = {}
 
+" Stack of dictionaries representing nested options
+let s:executionContext = []
+
 " state flag used to vary behavior of certain automated actions
 let s:isEditFileRunning = 0
 
@@ -401,6 +404,20 @@ function! s:VCSCommandUtility.addMenuItem(shortcut, command)
 	if s:menuEnabled
 	    exe 'amenu <silent> '.s:menuPriority.' '.s:menuRoot.'.'.a:shortcut.' '.a:command
 	endif
+endfunction
+
+" Function: s:VCSCommandUtility.pushContext(context) {{{2
+" Adds a dictionary containing current options to the stack.
+
+function! s:VCSCommandUtility.pushContext(context)
+	call insert(s:executionContext, a:context)
+endfunction
+
+" Function: s:VCSCommandUtility.popContext() {{{2
+" Removes a dictionary containing current options from the stack.
+
+function! s:VCSCommandUtility.popContext()
+	call remove(s:executionContext, 0)
 endfunction
 
 " Function: s:ClearMenu() {{{2
@@ -1277,9 +1294,15 @@ endfunction
 " searched in the window, buffer, then global spaces.
 
 function! VCSCommandGetOption(name, default)
+	for context in s:executionContext
+		if has_key(context, a:name)
+			return context[a:name]
+		endif
+	endfor
 	if has_key(s:optionOverrides, a:name) && len(s:optionOverrides[a:name]) > 0
 		return s:optionOverrides[a:name][-1]
-	elseif exists('w:' . a:name)
+	endif
+	if exists('w:' . a:name)
 		return w:{a:name}
 	elseif exists('b:' . a:name)
 		return b:{a:name}
