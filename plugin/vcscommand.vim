@@ -1013,11 +1013,11 @@ function! s:VCSVimDiff(...)
 				diffthis
 				let t:vcsCommandVimDiffScratchList = [resultBuffer]
 				" If no split method is defined, cheat, and set it to vertical.
+				call s:VCSCommandUtility.pushContext({'VCSCommandSplit': orientation})
 				try
-					call s:OverrideOption('VCSCommandSplit', orientation)
 					let resultBuffer = s:VCSReview(a:2)
 				finally
-					call s:OverrideOption('VCSCommandSplit')
+					call s:VCSCommandUtility.popContext()
 				endtry
 				if resultBuffer < 0
 					echomsg 'Can''t open revision ' . a:1
@@ -1027,22 +1027,16 @@ function! s:VCSVimDiff(...)
 				diffthis
 				let t:vcsCommandVimDiffScratchList += [resultBuffer]
 			else
-				" Add new buffer
-				call s:OverrideOption('VCSCommandEdit', 'split')
+				" Add new buffer.  Force splitting behavior, otherwise why use vimdiff?
+				call s:VCSCommandUtility.pushContext({'VCSCommandEdit': 'split', 'VCSCommandSplit': orientation})
 				try
-					" Force splitting behavior, otherwise why use vimdiff?
-					call s:OverrideOption('VCSCommandSplit', orientation)
-					try
-						if(a:0 == 0)
-							let resultBuffer = s:VCSReview()
-						else
-							let resultBuffer = s:VCSReview(a:1)
-						endif
-					finally
-						call s:OverrideOption('VCSCommandSplit')
-					endtry
+					if(a:0 == 0)
+						let resultBuffer = s:VCSReview()
+					else
+						let resultBuffer = s:VCSReview(a:1)
+					endif
 				finally
-					call s:OverrideOption('VCSCommandEdit')
+					call s:VCSCommandUtility.popContext()
 				endtry
 				if resultBuffer < 0
 					echomsg 'Can''t open current revision'
