@@ -357,9 +357,6 @@ let s:VCSCommandUtility = {}
 " plugin-specific information:  {vcs -> [script, {command -> function}, {key -> mapping}]}
 let s:plugins = {}
 
-" temporary values of overridden configuration variables
-let s:optionOverrides = {}
-
 " Stack of dictionaries representing nested options
 let s:executionContext = []
 
@@ -705,21 +702,6 @@ function! s:MarkOrigBufferForSetup(buffer)
 		endif
 	endif
 	return a:buffer
-endfunction
-
-" Function: s:OverrideOption(option, [value]) {{{2
-" Provides a temporary override for the given VCS option.  If no value is
-" passed, the override is disabled.
-
-function! s:OverrideOption(option, ...)
-	if a:0 == 0
-		call remove(s:optionOverrides[a:option], -1)
-	else
-		if !has_key(s:optionOverrides, a:option)
-			let s:optionOverrides[a:option] = []
-		endif
-		call add(s:optionOverrides[a:option], a:1)
-	endif
 endfunction
 
 " Function: s:WipeoutCommandBuffers() {{{2
@@ -1293,9 +1275,6 @@ function! VCSCommandGetOption(name, default)
 			return context[a:name]
 		endif
 	endfor
-	if has_key(s:optionOverrides, a:name) && len(s:optionOverrides[a:name]) > 0
-		return s:optionOverrides[a:name][-1]
-	endif
 	if exists('w:' . a:name)
 		return w:{a:name}
 	elseif exists('b:' . a:name)
