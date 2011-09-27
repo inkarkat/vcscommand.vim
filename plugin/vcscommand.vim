@@ -383,15 +383,27 @@ function! s:VCSCommandUtility.system(...)
 		set sxq=\"
 	endif
 	try
+		let output = call('system', a:000)
 		if exists('*iconv') && has('multi_byte')
-			return iconv(call('system', a:000), &tenc, &enc)
+			if(strlen(&tenc) && &tenc != &enc)
+				let output = iconv(output, &tenc, &enc)
+			else
+				let originalBuffer = VCSCommandGetOriginalBuffer(VCSCommandGetOption('VCSCommandEncodeAsFile', 0))
+				if originalBuffer
+					let fenc = getbufvar(originalBuffer, '&fenc')
+					if fenc != &enc
+						let output = iconv(output, fenc, &enc)
+					endif
+				endif
+			endif
+
 		endif
-		return call('system', a:000)
 	finally
 		if exists("save_sxq")
 			let &sxq = save_sxq
 		endif
 	endtry
+	return output
 endfunction
 
 " Function: s:VCSCommandUtility.addMenuItem(shortcut, command) {{{2
@@ -785,6 +797,7 @@ endfunction
 
 " Function: s:VCSAnnotate(...) {{{2
 function! s:VCSAnnotate(bang, ...)
+	call s:VCSCommandUtility.pushContext({'VCSCommandEncodeAsFile': bufnr('%')})
 	try
 		let line = line('.')
 		let currentBuffer = bufnr('%')
@@ -838,6 +851,8 @@ function! s:VCSAnnotate(bang, ...)
 	catch
 		call s:ReportError(v:exception)
 		return -1
+	finally
+		call s:VCSCommandUtility.popContext()
 	endtry
 endfunction
 
@@ -941,21 +956,31 @@ function! s:VCSGotoOriginal(bang)
 endfunction
 
 function! s:VCSDiff(...)  "{{{2
-	let resultBuffer = s:ExecuteVCSCommand('Diff', a:000)
-	if resultBuffer > 0
-		let &filetype = 'diff'
-	elseif resultBuffer == 0
-		echomsg 'No differences found'
-	endif
-	return resultBuffer
+	call s:VCSCommandUtility.pushContext({'VCSCommandEncodeAsFile': bufnr('%')})
+	try
+		let resultBuffer = s:ExecuteVCSCommand('Diff', a:000)
+		if resultBuffer > 0
+			let &filetype = 'diff'
+		elseif resultBuffer == 0
+			echomsg 'No differences found'
+		endif
+		return resultBuffer
+	finally
+		call s:VCSCommandUtility.popContext()
+	endtry
 endfunction
 
 function! s:VCSReview(...)  "{{{2
-	let resultBuffer = s:ExecuteVCSCommand('Review', a:000)
-	if resultBuffer > 0
-		let &filetype = getbufvar(b:VCSCommandOriginalBuffer, '&filetype')
-	endif
-	return resultBuffer
+	call s:VCSCommandUtility.pushContext({'VCSCommandEncodeAsFile': bufnr('%')})
+	try
+		let resultBuffer = s:ExecuteVCSCommand('Review', a:000)
+		if resultBuffer > 0
+			let &filetype = getbufvar(b:VCSCommandOriginalBuffer, '&filetype')
+		endif
+		return resultBuffer
+	finally
+		call s:VCSCommandUtility.popContext()
+	endtry
 endfunction
 
 " Function: s:VCSVimDiff(...) {{{2
