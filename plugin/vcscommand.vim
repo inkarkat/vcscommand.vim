@@ -383,7 +383,7 @@ function! s:VCSCommandUtility.system(...)
 		set sxq=\"
 	endif
 	try
-		if exists('*iconv')
+		if exists('*iconv') && has('multi_byte')
 			return iconv(call('system', a:000), &tenc, &enc)
 		endif
 		return call('system', a:000)
