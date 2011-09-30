@@ -920,6 +920,11 @@ endfunction
 " Function: s:VCSFinishCommit(logMessageList, originalBuffer) {{{2
 function! s:VCSFinishCommit(logMessageList, originalBuffer)
 	let messageFileName = tempname()
+	if exists('*iconv') && has('multi_byte')
+		if(strlen(&tenc) && &tenc != &enc)
+			call map(a:logMessageList, 'iconv(v:val, &enc, &tenc)')
+		endif
+	endif
 	call writefile(a:logMessageList, messageFileName)
 	try
 		let resultBuffer = s:ExecuteVCSCommand('Commit', [messageFileName])
