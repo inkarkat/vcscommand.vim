@@ -89,22 +89,17 @@ endfunction
 
 " Function: s:svnFunctions.Identify(buffer) {{{2
 function! s:svnFunctions.Identify(buffer)
-	let fileName = resolve(bufname(a:buffer))
-	if isdirectory(fileName)
-		let directoryName = fileName
-	else
-		let directoryName = fnamemodify(fileName, ':h')
-	endif
-	if strlen(directoryName) > 0
-		let svnDir = directoryName . '/.svn'
-	else
-		let svnDir = '.svn'
-	endif
-	if isdirectory(svnDir)
-		return 1
-	else
-		return 0
-	endif
+	let oldCwd = VCSCommandChangeToCurrentFileDir(resolve(bufname(a:buffer)))
+	try
+		call s:VCSCommandUtility.system(s:Executable() . ' info .')
+		if(v:shell_error)
+			return 0
+		else
+			return g:VCSCOMMAND_IDENTIFY_EXACT
+		endif
+	finally
+		call VCSCommandChdir(oldCwd)
+	endtry
 endfunction
 
 " Function: s:svnFunctions.Add() {{{2
