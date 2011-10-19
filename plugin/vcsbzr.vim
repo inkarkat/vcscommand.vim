@@ -43,7 +43,9 @@ if v:version < 700
   finish
 endif
 
-runtime plugin/vcscommand.vim
+if !exists('g:loaded_VCSCommand')
+	runtime plugin/vcscommand.vim
+endif
 
 if !executable(VCSCommandGetOption('VCSCommandBZRExec', 'bzr'))
   " BZR is not installed

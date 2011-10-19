@@ -89,7 +89,9 @@ if v:version < 700
 	finish
 endif
 
-runtime plugin/vcscommand.vim
+if !exists('g:loaded_VCSCommand')
+	runtime plugin/vcscommand.vim
+endif
 
 if !executable(VCSCommandGetOption('VCSCommandCVSExec', 'cvs'))
 	" CVS is not installed
