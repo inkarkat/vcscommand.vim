@@ -818,6 +818,7 @@ function! s:VCSAnnotate(bang, ...)
 			if splitRegex == ''
 				return annotateBuffer
 			endif
+			wincmd J
 			let originalFileType = getbufvar(originalBuffer, '&ft')
 			let annotateFileType = getbufvar(annotateBuffer, '&ft')
 
