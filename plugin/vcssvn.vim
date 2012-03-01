@@ -193,6 +193,10 @@ function! s:svnFunctions.GetBufferInfo()
 	if statusText =~ '^?'
 		return ['Unknown']
 	endif
+	" File explicitly ignored by SVN.
+	if statusText =~ '^I'
+		return ['Ignored']
+	endif
 
 	let [flags, revision, repository] = matchlist(statusText, '^\(.\{9}\)\s*\(\d\+\)\s\+\(\d\+\)')[1:3]
 	if revision == ''
