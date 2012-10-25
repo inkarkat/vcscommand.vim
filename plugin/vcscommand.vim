@@ -555,7 +555,10 @@ function! s:EditFile(command, originalBuffer, statusText)
 			if VCSCommandGetOption('VCSCommandSplit', 'horizontal') == 'horizontal'
 				rightbelow split
 			else
-				vert rightbelow split
+				" Hack to make :VCSVimDiff open the other file
+				" to the left.
+				"vert rightbelow split
+				vert split
 			endif
 		endif
 
