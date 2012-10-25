@@ -1323,6 +1323,18 @@ function! VCSCommandGetOption(name, default)
 	endif
 endfunction
 
+" Function: VCSCommandGetConfig(name, default) {{{2
+" Grab a configuration option to override the default provided.
+
+function! VCSCommandGetConfig(name, default)
+	let vcsType = VCSCommandGetVCSType(bufnr('%'))
+	let value = a:default
+	if has_key(s:plugins[vcsType][1], a:name)
+		let value = s:plugins[vcsType][1][a:name]
+	endif
+	return VCSCommandGetOption('VCSCommand' . vcsType . a:name, value)
+endfunction
+
 " Function: VCSCommandDisableBufferSetup() {{{2
 " Global function for deactivating the buffer autovariables.
 
