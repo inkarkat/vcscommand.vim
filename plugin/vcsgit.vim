@@ -109,12 +109,34 @@ function! s:gitFunctions.Add(argList)
 	return s:DoCommand(join(['add'] + ['-v'] + a:argList, ' '), 'add', join(a:argList, ' '), {})
 endfunction
 
+" Function: s:PreviousRevision(rev) {{{2
+function! s:PreviousRevision(rev)
+	let oldCwd = VCSCommandChangeToCurrentFileDir(resolve(bufname(VCSCommandGetOriginalBuffer('%'))))
+	try
+		let output = s:VCSCommandUtility.system(s:Executable() . ' rev-parse ' . a:rev . '^')
+		if v:shell_error
+			if strlen(output) == 0
+				throw 'Version control command rev-parse failed'
+			else
+				let output = substitute(output, '\n', '  ', 'g')
+				throw 'Version control command rev-parse failed:  ' . output
+			endif
+		endif
+		return substitute(output, "\n", '', 'g')
+	finally
+		call VCSCommandChdir(oldCwd)
+	endtry
+endfunction
 " Function: s:gitFunctions.Annotate(argList) {{{2
 function! s:gitFunctions.Annotate(argList)
 	if len(a:argList) == 0
 		if &filetype == 'gitannotate'
-			" Perform annotation of the version indicated by the current line.
-			let options = matchstr(getline('.'),'^\x\+')
+			" Perform annotation of the predecessor of the version indicated by the current line.
+			let rev = matchstr(getline('.'),'^\x\+')
+			if rev == ''
+				throw 'No revision found in current line'
+			endif
+			let options = s:PreviousRevision(rev)
 		else
 			let options = ''
 		endif
