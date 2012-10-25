@@ -792,12 +792,25 @@ function! s:VCSAnnotate(bang, ...)
 		let line = line('.')
 		let currentBuffer = bufnr('%')
 		let originalBuffer = VCSCommandGetOriginalBuffer(currentBuffer)
+		let isFromOriginal = (currentBuffer == originalBuffer)
+		let isSplit = a:bang == '!' && VCSCommandGetOption('VCSCommandDisableSplitAnnotate', 0) == 0
+
+		if ! isFromOriginal && ! exists('b:VCSCommandAnnotateHeader') && &ft != tolower(b:VCSCommandVCSType . 'annotate')
+			wincmd h
+			if exists('b:VCSCommandAnnotateHeader')
+				" Go to the annotate header entry corresponding to the current line.
+				execute line
+			else
+				wincmd p	" Oops, that wasn't the annotate header side window we've expected.
+			endif
+		endif
+		let isReuseExistingSplit = (isSplit && ! isFromOriginal && exists('b:VCSCommandAnnotateHeader') && VCSCommandGetOption('VCSCommandEdit', 'split') == 'edit')
 
 		let annotateBuffer = s:ExecuteVCSCommand('Annotate', a:000)
 		if annotateBuffer == -1
 			return -1
 		endif
-		if a:bang == '!' && VCSCommandGetOption('VCSCommandDisableSplitAnnotate', 0) == 0
+		if isSplit
 			let vcsType = VCSCommandGetVCSType(annotateBuffer)
 			let functionMap = s:plugins[vcsType][1]
 			let splitRegex = ''
@@ -808,7 +821,6 @@ function! s:VCSAnnotate(bang, ...)
 			if splitRegex == ''
 				return annotateBuffer
 			endif
-			wincmd J
 			let originalFileType = getbufvar(originalBuffer, '&ft')
 			let annotateFileType = getbufvar(annotateBuffer, '&ft')
 
@@ -822,14 +834,24 @@ function! s:VCSAnnotate(bang, ...)
 
 			call setbufvar('%', '&filetype', getbufvar(originalBuffer, '&filetype'))
 			set scrollbind
+			let statusText = (exists('b:VCSCommandStatusText') ? b:VCSCommandStatusText . ' ' : '') . 'header'
+			if isReuseExistingSplit
+				wincmd l
+
+				" :noautocmd avoids an automatic close of the header when it's the last visible window.
+				noautocmd hide
+			endif
+			silent! wincmd J
 			leftabove vert new
+
 			normal! 0P
 			execute "normal!" . (col('$') + (&number ? &numberwidth : 0)). "\<c-w>|"
-			call s:SetupScratchBuffer('annotate', vcsType, originalBuffer, 'header')
+			call s:SetupScratchBuffer('annotate', vcsType, originalBuffer, statusText)
+			let b:VCSCommandAnnotateHeader = 1
 			wincmd l
 		endif
 
-		if currentBuffer == originalBuffer
+		if isFromOriginal
 			" Starting from the original source buffer, so the
 			" current line is relevant.
 			if a:0 == 0
