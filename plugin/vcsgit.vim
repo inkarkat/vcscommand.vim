@@ -124,7 +124,7 @@ function! s:gitFunctions.Annotate(argList)
 		let options = join(a:argList, ' ')
 	endif
 
-	return s:DoCommand('blame ' . options, 'annotate', options, {})
+	return s:DoCommand('bl ' . options, 'annotate', options, {})
 endfunction
 
 " Function: s:gitFunctions.Commit(argList) {{{2
