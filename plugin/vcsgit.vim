@@ -224,7 +224,22 @@ endfunction
 
 " Function: s:gitFunctions.Log() {{{2
 function! s:gitFunctions.Log(argList)
-	return s:DoCommand(join(['log'] + a:argList), 'log', join(a:argList, ' '), {})
+	if len(a:argList) == 0
+		let options = []
+		let caption = ''
+	elseif len(a:argList) == 1 && match(a:argList, '^-') == -1
+		let options = ['-n 1 ' . a:argList[0]]
+		let caption = a:argList[0]
+	elseif len(a:argList) == 2 && match(a:argList, '^-') == -1
+		let options = [join(a:argList, '..')]
+		let caption = options[0]
+	else
+		" Pass-through
+		let options = a:argList
+		let caption = join(a:argList, ' ')
+	endif
+
+	return s:DoCommand(join(['log'] + options), 'log', caption, {})
 endfunction
 
 " Function: s:gitFunctions.Revert(argList) {{{2
