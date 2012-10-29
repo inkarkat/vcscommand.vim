@@ -114,7 +114,7 @@ function! s:hgFunctions.Annotate(argList)
 	if len(a:argList) == 0
 		if &filetype ==? 'hgannotate'
 			" Perform annotation of the predecessor of the version indicated by the current line.
-			let rev = matchstr(getline('.'), '\v^\s*\w+\s+\zs\d+')
+			let rev = matchstr(getline('.'), s:hgFunctions.AnnotateRevisionRegex)
 			if rev < 1
 				throw 'No revision found in current line'
 			endif
@@ -272,6 +272,7 @@ endfunction
 
 " Annotate setting {{{2
 let s:hgFunctions.AnnotateSplitRegex = '\d\+: '
+let s:hgFunctions.AnnotateRevisionRegex = '\v^\s*\w+\s+\zs\d+'
 
 " Section: Plugin Registration {{{1
 let s:VCSCommandUtility = VCSCommandRegisterModule('HG', expand('<sfile>'), s:hgFunctions, [])

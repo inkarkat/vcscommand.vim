@@ -114,7 +114,7 @@ function! s:svnFunctions.Annotate(argList)
 	if len(a:argList) == 0
 		if &filetype ==? 'svnannotate'
 			" Perform annotation of the predecessor of the version indicated by the current line.
-			let rev = matchstr(getline('.'),'\v^\s+\zs\d+')
+			let rev = matchstr(getline('.'), s:svnFunctions.AnnotateRevisionRegex)
 			if rev < 1
 				throw 'No revision found in current line'
 			endif
@@ -282,6 +282,7 @@ endfunction
 
 " Annotate setting {{{2
 let s:svnFunctions.AnnotateSplitRegex = '\s\+\S\+\s\+\S\+ '
+let s:svnFunctions.AnnotateRevisionRegex = '\v^\s+\zs\d+'
 
 " Section: Plugin Registration {{{1
 let s:VCSCommandUtility = VCSCommandRegisterModule('SVN', expand('<sfile>'), s:svnFunctions, [])

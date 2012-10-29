@@ -109,7 +109,7 @@ function! s:bzrFunctions.Annotate(argList)
   if len(a:argList) == 0
     if &filetype ==? 'bzrannotate'
       " Perform annotation of the version indicated by the current line.
-      let caption = matchstr(getline('.'),'\v^\s+\zs\d+')
+      let caption = matchstr(getline('.'), s:bzrFunctions.AnnotateRevisionRegex)
       let options = ' -r' . caption
     else
       let caption = ''
@@ -257,6 +257,7 @@ endfunction
 
 " Annotate setting {{{2
 let s:bzrFunctions.AnnotateSplitRegex = '^[^|]\+ | '
+let s:bzrFunctions.AnnotateRevisionRegex = '\v^\s+\zs\d+'
 
 " Section: Plugin Registration {{{1
 let s:VCSCommandUtility = VCSCommandRegisterModule('BZR', expand('<sfile>'), s:bzrFunctions, [])

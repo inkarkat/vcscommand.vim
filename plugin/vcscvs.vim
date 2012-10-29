@@ -185,15 +185,15 @@ function! s:cvsFunctions.Annotate(argList)
 		if &filetype ==? 'cvsannotate'
 			" This is a CVSAnnotate buffer.  Perform annotation of the version
 			" indicated by the current line.
-			let caption = matchstr(getline('.'),'\v^[0-9.]+')
+			let caption = matchstr(getline('.'), s:cvsFunctions.AnnotateRevisionRegex)
 
 			if VCSCommandGetOption('VCSCommandCVSAnnotateParent', 0) != 0
 				if caption != '1.1'
-					let revmaj = matchstr(caption,'\v[0-9.]+\ze\.[0-9]+')
-					let revmin = matchstr(caption,'\v[0-9.]+\.\zs[0-9]+') - 1
+					let revmaj = get(matchlist(caption, s:cvsFunctions.AnnotateRevisionRegex), 1, 0)
+					let revmin = get(matchlist(caption, s:cvsFunctions.AnnotateRevisionRegex), 2, 0)
 					if revmin == 0
 						" Jump to ancestor branch
-						let caption = matchstr(revmaj,'\v[0-9.]+\ze\.[0-9]+')
+						let caption = get(matchlist(revmaj, s:cvsFunctions.AnnotateRevisionRegex), 1, 0)
 					else
 						let caption = revmaj . "." .  revmin
 					endif
@@ -396,6 +396,7 @@ endfunction
 
 " Annotate setting {{{2
 let s:cvsFunctions.AnnotateSplitRegex = '): '
+let s:cvsFunctions.AnnotateRevisionRegex = '\v([0-9.]+)\.([0-9]+)'
 
 " Section: Command definitions {{{1
 " Section: Primary commands {{{2

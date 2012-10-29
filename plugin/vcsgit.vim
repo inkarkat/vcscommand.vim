@@ -132,7 +132,7 @@ function! s:gitFunctions.Annotate(argList)
 	if len(a:argList) == 0
 		if &filetype == 'gitannotate'
 			" Perform annotation of the predecessor of the version indicated by the current line.
-			let rev = matchstr(getline('.'),'^\x\+')
+			let rev = matchstr(getline('.'), s:gitFunctions.AnnotateRevisionRegex)
 			if rev == ''
 				throw 'No revision found in current line'
 			endif
@@ -264,6 +264,7 @@ endfunction
 
 " Annotate setting {{{2
 let s:gitFunctions.AnnotateSplitRegex = ') '
+let s:gitFunctions.AnnotateRevisionRegex = '^\x\+'
 
 " Section: Plugin Registration {{{1
 let s:VCSCommandUtility = VCSCommandRegisterModule('git', expand('<sfile>'), s:gitFunctions, [])
