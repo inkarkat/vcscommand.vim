@@ -113,8 +113,12 @@ endfunction
 function! s:hgFunctions.Annotate(argList)
 	if len(a:argList) == 0
 		if &filetype ==? 'hgannotate'
-			" Perform annotation of the version indicated by the current line.
-			let caption = matchstr(getline('.'),'\v^\s*\w+\s+\zs\d+')
+			" Perform annotation of the predecessor of the version indicated by the current line.
+			let rev = matchstr(getline('.'), '\v^\s*\w+\s+\zs\d+')
+			if rev < 1
+				throw 'No revision found in current line'
+			endif
+			let caption = rev - 1
 			let options = ' -un -r' . caption
 		else
 			let caption = ''
