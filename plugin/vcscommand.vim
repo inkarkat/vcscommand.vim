@@ -814,6 +814,10 @@ function! s:VCSAnnotate(bang, ...)
 		if annotateBuffer == -1
 			return -1
 		endif
+
+		" Start with all folds open; we want to see the annotations.
+		setlocal foldlevel=999
+
 		if isSplit
 			let vcsType = VCSCommandGetVCSType(annotateBuffer)
 			let functionMap = s:plugins[vcsType][1]
