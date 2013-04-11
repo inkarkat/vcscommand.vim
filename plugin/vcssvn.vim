@@ -72,7 +72,7 @@ let s:svnFunctions = {}
 " Returns the executable used to invoke git suitable for use in a shell
 " command.
 function! s:Executable()
-	return VCSCommandGetOption('VCSCommandSVNExec', 'svn')
+	return shellescape(VCSCommandGetOption('VCSCommandSVNExec', 'svn'))
 endfunction
 
 " Function: s:DoCommand(cmd, cmdName, statusText, options) {{{2

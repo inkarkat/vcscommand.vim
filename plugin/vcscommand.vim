@@ -378,31 +378,21 @@ endfunction
 " command line on Windows systems.
 
 function! s:VCSCommandUtility.system(...)
-	if (has("win32") || has("win64")) && &sxq !~ '"'
-		let save_sxq = &sxq
-		set sxq=\"
-	endif
-	try
-		let output = call('system', a:000)
-		if exists('*iconv') && has('multi_byte')
-			if(strlen(&tenc) && &tenc != &enc)
-				let output = iconv(output, &tenc, &enc)
-			else
-				let originalBuffer = VCSCommandGetOriginalBuffer(VCSCommandGetOption('VCSCommandEncodeAsFile', 0))
-				if originalBuffer
-					let fenc = getbufvar(originalBuffer, '&fenc')
-					if fenc != &enc
-						let output = iconv(output, fenc, &enc)
-					endif
+	let output = call('system', a:000)
+	if exists('*iconv') && has('multi_byte')
+		if(strlen(&tenc) && &tenc != &enc)
+			let output = iconv(output, &tenc, &enc)
+		else
+			let originalBuffer = VCSCommandGetOriginalBuffer(VCSCommandGetOption('VCSCommandEncodeAsFile', 0))
+			if originalBuffer
+				let fenc = getbufvar(originalBuffer, '&fenc')
+				if fenc != &enc
+					let output = iconv(output, fenc, &enc)
 				endif
 			endif
+		endif
 
-		endif
-	finally
-		if exists("save_sxq")
-			let &sxq = save_sxq
-		endif
-	endtry
+	endif
 	return output
 endfunction
 
