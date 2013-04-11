@@ -1023,8 +1023,7 @@ function! s:VCSVimDiff(...)
 				let b:VCSCommandCommand = 'vimdiff'
 				diffthis
 				let t:vcsCommandVimDiffScratchList = [resultBuffer]
-				" If no split method is defined, cheat, and set it to vertical.
-				call s:VCSCommandUtility.pushContext({'VCSCommandSplit': orientation})
+				call s:VCSCommandUtility.pushContext({'VCSCommandEdit': 'split', 'VCSCommandSplit': orientation})
 				try
 					let resultBuffer = s:VCSReview(a:2)
 				finally
@@ -1038,7 +1037,6 @@ function! s:VCSVimDiff(...)
 				diffthis
 				let t:vcsCommandVimDiffScratchList += [resultBuffer]
 			else
-				" Add new buffer.  Force splitting behavior, otherwise why use vimdiff?
 				call s:VCSCommandUtility.pushContext({'VCSCommandEdit': 'split', 'VCSCommandSplit': orientation})
 				try
 					if(a:0 == 0)
