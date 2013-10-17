@@ -1232,10 +1232,17 @@ function! VCSCommandDoCommand(cmd, cmdName, statusText, options)
 		let fileName = fnamemodify(path, ':t')
 	endif
 
-	if match(a:cmd, '<VCSCOMMANDFILE>') > 0
-		let fullCmd = substitute(a:cmd, '<VCSCOMMANDFILE>', fileName, 'g')
+	let cmd = a:cmd
+	let statusText = a:statusText
+	let HookFunction = VCSCommandGetOption('VCSCommandCommandHook', '')
+	if ! empty(HookFunction)
+	    let [cmd, fileName, statusText] = call(HookFunction, [a:cmdName, cmd, fileName, statusText])
+	endif
+
+	if match(cmd, '<VCSCOMMANDFILE>') > 0
+		let fullCmd = substitute(cmd, '<VCSCOMMANDFILE>', fileName, 'g')
 	else
-		let fullCmd = a:cmd . ' -- ' . shellescape(fileName)
+		let fullCmd = cmd . ' -- ' . shellescape(fileName)
 	endif
 
 	" Change to the directory of the current buffer.  This is done for CVS, but
@@ -1270,7 +1277,7 @@ function! VCSCommandDoCommand(cmd, cmdName, statusText, options)
 		return 0
 	endif
 
-	call s:EditFile(a:cmdName, originalBuffer, a:statusText)
+	call s:EditFile(a:cmdName, originalBuffer, statusText)
 
 	silent 0put=output
 
