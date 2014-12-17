@@ -223,7 +223,7 @@ function! s:hgFunctions.Log(argList)
 		let caption = ''
 	elseif len(a:argList) <= 2 && match(a:argList, '^-') == -1
 		let options = ['-r' . join(a:argList, ':')]
-		let caption = options[0]
+		let caption = join(a:argList, ':')
 	else
 		" Pass-through
 		let options = a:argList
