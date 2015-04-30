@@ -27,12 +27,14 @@ if exists("b:current_syntax")
 	finish
 endif
 
+syn match svnSigil /^G/ contained
 syn match svnName /\S\+/ contained
-syn match svnVer /^\s*\zs\d\+/ contained nextgroup=svnName skipwhite
-syn match svnHead /^\s*\d\+\s\+\S\+/ contains=svnVer,svnName
+syn match svnVer /\%(^\%(G\s\)\?\s*\)\@<=\d\+/ contained nextgroup=svnName skipwhite
+syn match svnHead /^\%(G\s\)\?\s*\d\+\s\+\S\+/ contains=svnSigil,svnVer
 
 if !exists("did_svnannotate_syntax_inits")
 	let did_svnannotate_syntax_inits = 1
+	hi link svnSigil Special
 	hi link svnName Type
 	hi link svnVer Statement
 endif
