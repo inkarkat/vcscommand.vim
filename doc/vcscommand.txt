@@ -424,6 +424,7 @@ level and are checked in that order of precedence.
 
 The following variables are available:
 
+|VCSCommandCommandHook|
 |VCSCommandCommitOnWrite|
 |VCSCommandCVSDiffOpt|
 |VCSCommandCVSExec|
@@ -448,6 +449,15 @@ The following variables are available:
 |VCSCommandSVNExec|
 |VCSCommandVCSTypeOverride|
 |VCSCommandVCSTypePreference|
+
+VCSCommandCommandHook				*VCSCommandCommandHook*
+
+This can contain a |Funcref| that allows to manipulate each external
+executable call, for example to insert default arguments.
+The custom function must take 4 arguments: >
+    function CommandHook(cmdName, cmd, fileName, statusText)
+The first argument identifies the command (e.g. "annotate"), the latter 3 must
+be returned back (as-is or modified) in a List.
 
 VCSCommandCommitOnWrite				*VCSCommandCommitOnWrite*
 
