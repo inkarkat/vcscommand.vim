@@ -835,13 +835,13 @@ function! s:VCSAnnotate(bang, ...)
 			let saveselection = &selection
 			set selection=inclusive
 			try
-				execute "normal! 0zR\<c-v>G/" . splitRegex . "/e\<cr>d"
+				execute "normal! 0\<c-v>G/" . splitRegex . "/e\<cr>d"
 			finally
 				let &selection = saveselection
 			endtry
 
 			call setbufvar('%', '&filetype', getbufvar(originalBuffer, '&filetype'))
-			set scrollbind
+			setlocal scrollbind
 			let statusText = (exists('b:VCSCommandStatusText') ? b:VCSCommandStatusText . ' ' : '') . 'header'
 			if isReuseExistingSplit
 				wincmd l
@@ -851,6 +851,7 @@ function! s:VCSAnnotate(bang, ...)
 			endif
 			silent! wincmd J
 			leftabove vert new
+			setlocal scrollbind foldlevel=999
 
 			normal! 0P
 			execute "normal!" . (col('$') + (&number ? &numberwidth : 0)). "\<c-w>|"
