@@ -564,8 +564,6 @@ function! s:EditFile(command, originalBuffer, statusText)
 
 		enew
 
-		call s:SetupScratchBuffer(a:command, vcsType, a:originalBuffer, a:statusText)
-
 	finally
 		let s:isEditFileRunning -= 1
 	endtry
@@ -629,11 +627,10 @@ function!  s:IdentifyVCSType(buffer)
 	endif
 endfunction
 
-" Function: s:SetupScratchBuffer(command, vcsType, originalBuffer, statusText) {{{2
-" Creates convenience buffer variables and the name of a vcscommand result
-" buffer.
+" Function: VCSCommandGetScratchBufferName(command, vcsType, originalBuffer, statusText) {{{2
+" Determines the name of a vcscommand result buffer.
 
-function! s:SetupScratchBuffer(command, vcsType, originalBuffer, statusText)
+function! VCSCommandGetScratchBufferName(command, vcsType, originalBuffer, statusText)
 	let nameExtension = VCSCommandGetOption('VCSCommandResultBufferNameExtension', '')
 	if nameExtension == ''
 		let nameFunction = VCSCommandGetOption('VCSCommandResultBufferNameFunction', 's:GenerateResultBufferName')
@@ -641,8 +638,14 @@ function! s:SetupScratchBuffer(command, vcsType, originalBuffer, statusText)
 		let nameFunction = VCSCommandGetOption('VCSCommandResultBufferNameFunction', 's:GenerateResultBufferNameWithExtension')
 	endif
 
-	let name = call(nameFunction, [a:command, a:originalBuffer, a:vcsType, a:statusText])
+	return call(nameFunction, [a:command, a:originalBuffer, a:vcsType, a:statusText])
+endfunction
 
+" Function: s:SetupScratchBuffer(command, vcsType, originalBuffer, statusText) {{{2
+" Creates convenience buffer variables and the name of a vcscommand result
+" buffer.
+
+function! s:SetupScratchBuffer(command, vcsType, originalBuffer, statusText)
 	let b:VCSCommandCommand = a:command
 	let b:VCSCommandOriginalBuffer = a:originalBuffer
 	let b:VCSCommandSourceFile = bufname(a:originalBuffer)
@@ -658,6 +661,7 @@ function! s:SetupScratchBuffer(command, vcsType, originalBuffer, statusText)
 	if VCSCommandGetOption('VCSCommandDeleteOnHide', 0)
 		setlocal bufhidden=delete
 	endif
+	let name = VCSCommandGetScratchBufferName(a:command, a:vcsType, a:originalBuffer, a:statusText)
 	silent noautocmd file `=name`
 endfunction
 
@@ -795,12 +799,28 @@ function! s:VCSAnnotate(bang, ...)
 		let line = line('.')
 		let currentBuffer = bufnr('%')
 		let originalBuffer = VCSCommandGetOriginalBuffer(currentBuffer)
+		let isFromOriginal = (currentBuffer == originalBuffer)
 		let isSplit = a:bang == '!' && VCSCommandGetOption('VCSCommandDisableSplitAnnotate', 0) == 0
+
+		if ! isFromOriginal && ! exists('b:VCSCommandAnnotateHeader') && &ft != tolower(b:VCSCommandVCSType . 'annotate')
+			wincmd h
+			if exists('b:VCSCommandAnnotateHeader')
+				" Go to the annotate header entry corresponding to the current line.
+				execute line
+			else
+				wincmd p	" Oops, that wasn't the annotate header side window we've expected.
+			endif
+		endif
+		let isReuseExistingSplit = (isSplit && ! isFromOriginal && exists('b:VCSCommandAnnotateHeader') && VCSCommandGetOption('VCSCommandEdit', 'split') == 'edit')
 
 		let annotateBuffer = s:ExecuteVCSCommand('Annotate', a:000)
 		if annotateBuffer == -1
 			return -1
 		endif
+
+		" Start with all folds open; we want to see the annotations.
+		setlocal foldlevel=999
+
 		if isSplit
 			let vcsType = VCSCommandGetVCSType(annotateBuffer)
 			let functionMap = s:plugins[vcsType][1]
@@ -812,29 +832,41 @@ function! s:VCSAnnotate(bang, ...)
 			if splitRegex == ''
 				return annotateBuffer
 			endif
-			wincmd J
 			let originalFileType = getbufvar(originalBuffer, '&ft')
 			let annotateFileType = getbufvar(annotateBuffer, '&ft')
 
 			let saveselection = &selection
 			set selection=inclusive
 			try
-				execute "normal! 0zR\<c-v>G/" . splitRegex . "/e\<cr>d"
+				execute "normal! 0\<c-v>G/" . splitRegex . "/e\<cr>d"
 			finally
 				let &selection = saveselection
 			endtry
 
 			call setbufvar('%', '&filetype', getbufvar(originalBuffer, '&filetype'))
-			set scrollbind
+			setlocal scrollbind
+			let statusText = (exists('b:VCSCommandStatusText') ? b:VCSCommandStatusText . ' ' : '') . 'header'
+			if isReuseExistingSplit
+				wincmd l
+
+				" :noautocmd avoids an automatic close of the header when it's the last visible window.
+				noautocmd hide
+			endif
+			silent! wincmd J
 			leftabove vert new
+			setlocal scrollbind foldlevel=999 nonumber
+			if exists('+relativenumber') | setlocal norelativenumber | endif
+
 			normal! 0P
 			execute "normal!" . (col('$') + (&number ? &numberwidth : 0)). "\<c-w>|"
-			call s:SetupScratchBuffer('annotate', vcsType, originalBuffer, 'header')
+			call s:SetupScratchBuffer('annotate', vcsType, originalBuffer, statusText)
+			let b:VCSCommandAnnotateHeader = 1
+			call setbufvar(annotateBuffer, 'VCSCommandAnnotateHeaderBuffer', bufnr('%'))
 			silent do VCSCommand User VCSBlameHeaderCreated
 			wincmd l
 		endif
 
-		if currentBuffer == originalBuffer
+		if isFromOriginal
 			" Starting from the original source buffer, so the
 			" current line is relevant.
 			if a:0 == 0
@@ -885,6 +917,7 @@ function! s:VCSCommit(bang, message)
 		endif
 
 		call s:EditFile('commitlog', originalBuffer, '')
+		call s:SetupScratchBuffer(commitlog, vcsType, originalBuffer, '')
 		setlocal ft=vcscommit
 
 		" Create a commit mapping.
@@ -1284,6 +1317,9 @@ function! VCSCommandDoCommand(cmd, cmdName, statusText, options)
 	call s:EditFile(a:cmdName, originalBuffer, a:statusText)
 
 	silent 0put=output
+
+	call s:SetupScratchBuffer(a:cmdName, getbufvar(originalBuffer, 'VCSCommandVCSType'), originalBuffer, a:statusText)
+
 
 	" The last command left a blank line at the end of the buffer.  If the
 	" last line is folded (a side effect of the 'put') then the attempt to
