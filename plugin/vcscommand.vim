@@ -795,12 +795,13 @@ function! s:VCSAnnotate(bang, ...)
 		let line = line('.')
 		let currentBuffer = bufnr('%')
 		let originalBuffer = VCSCommandGetOriginalBuffer(currentBuffer)
+		let isSplit = a:bang == '!' && VCSCommandGetOption('VCSCommandDisableSplitAnnotate', 0) == 0
 
 		let annotateBuffer = s:ExecuteVCSCommand('Annotate', a:000)
 		if annotateBuffer == -1
 			return -1
 		endif
-		if a:bang == '!' && VCSCommandGetOption('VCSCommandDisableSplitAnnotate', 0) == 0
+		if isSplit
 			let vcsType = VCSCommandGetVCSType(annotateBuffer)
 			let functionMap = s:plugins[vcsType][1]
 			let splitRegex = ''
@@ -829,6 +830,7 @@ function! s:VCSAnnotate(bang, ...)
 			normal! 0P
 			execute "normal!" . (col('$') + (&number ? &numberwidth : 0)). "\<c-w>|"
 			call s:SetupScratchBuffer('annotate', vcsType, originalBuffer, 'header')
+			silent do VCSCommand User VCSBlameHeaderCreated
 			wincmd l
 		endif
 
@@ -847,6 +849,12 @@ function! s:VCSAnnotate(bang, ...)
 					normal! zv
 				endif
 			endif
+		endif
+
+		if isSplit
+			silent do VCSCommand User VCSBlameSourceCreated
+		else
+			silent do VCSCommand User VCSBlameCreated
 		endif
 
 		return annotateBuffer
@@ -1316,6 +1324,18 @@ function! VCSCommandGetOption(name, default)
 	else
 		return a:default
 	endif
+endfunction
+
+" Function: VCSCommandGetConfig(name, default) {{{2
+" Grab a configuration option to override the default provided.
+
+function! VCSCommandGetConfig(name, default)
+	let vcsType = VCSCommandGetVCSType(bufnr('%'))
+	let value = a:default
+	if has_key(s:plugins[vcsType][1], a:name)
+		let value = s:plugins[vcsType][1][a:name]
+	endif
+	return VCSCommandGetOption('VCSCommand' . vcsType . a:name, value)
 endfunction
 
 " Function: VCSCommandDisableBufferSetup() {{{2
