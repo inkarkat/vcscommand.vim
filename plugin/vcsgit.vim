@@ -109,12 +109,34 @@ function! s:gitFunctions.Add(argList)
 	return s:DoCommand(join(['add'] + ['-v'] + a:argList, ' '), 'add', join(a:argList, ' '), {})
 endfunction
 
+" Function: s:PreviousRevision(rev) {{{2
+function! s:PreviousRevision(rev)
+	let oldCwd = VCSCommandChangeToCurrentFileDir(resolve(bufname(VCSCommandGetOriginalBuffer('%'))))
+	try
+		let output = s:VCSCommandUtility.system(s:Executable() . ' rev-parse ' . a:rev . '^')
+		if v:shell_error
+			if strlen(output) == 0
+				throw 'Version control command rev-parse failed'
+			else
+				let output = substitute(output, '\n', '  ', 'g')
+				throw 'Version control command rev-parse failed:  ' . output
+			endif
+		endif
+		return substitute(output, "\n", '', 'g')
+	finally
+		call VCSCommandChdir(oldCwd)
+	endtry
+endfunction
 " Function: s:gitFunctions.Annotate(argList) {{{2
 function! s:gitFunctions.Annotate(argList)
 	if len(a:argList) == 0
 		if &filetype == 'gitannotate'
-			" Perform annotation of the version indicated by the current line.
-			let options = matchstr(getline('.'),'^\x\+')
+			" Perform annotation of the predecessor of the version indicated by the current line.
+			let rev = matchstr(getline('.'), s:gitFunctions.AnnotateRevisionRegex)
+			if rev == ''
+				throw 'No revision found in current line'
+			endif
+			let options = s:PreviousRevision(rev)
 		else
 			let options = ''
 		endif
@@ -202,7 +224,22 @@ endfunction
 
 " Function: s:gitFunctions.Log() {{{2
 function! s:gitFunctions.Log(argList)
-	return s:DoCommand(join(['log'] + a:argList), 'log', join(a:argList, ' '), {})
+	if len(a:argList) == 0
+		let options = []
+		let caption = ''
+	elseif len(a:argList) == 1 && match(a:argList, '^-') == -1
+		let options = ['-n 1 ' . a:argList[0]]
+		let caption = a:argList[0]
+	elseif len(a:argList) == 2 && match(a:argList, '^-') == -1
+		let options = [join(a:argList, '..')]
+		let caption = options[0]
+	else
+		" Pass-through
+		let options = a:argList
+		let caption = join(a:argList, ' ')
+	endif
+
+	return s:DoCommand(join(['log'] + options), 'log', caption, {})
 endfunction
 
 " Function: s:gitFunctions.Revert(argList) {{{2
@@ -242,6 +279,7 @@ endfunction
 
 " Annotate setting {{{2
 let s:gitFunctions.AnnotateSplitRegex = ') '
+let s:gitFunctions.AnnotateRevisionRegex = '^\x\+'
 
 " Section: Plugin Registration {{{1
 let s:VCSCommandUtility = VCSCommandRegisterModule('git', expand('<sfile>'), s:gitFunctions, [])

@@ -107,8 +107,12 @@ endfunction
 function! s:svkFunctions.Annotate(argList)
 	if len(a:argList) == 0
 		if &filetype ==? 'svkannotate'
-			" Perform annotation of the version indicated by the current line.
-			let caption = matchstr(getline('.'),'\v^\s+\zs\d+')
+			" Perform annotation of the predecessor of the version indicated by the current line.
+			let rev = matchstr(getline('.'), svkFunctions.AnnotateRevisionRegex)
+			if rev < 1
+				throw 'No revision found in current line'
+			endif
+			let caption = rev - 1
 			let options = ' -r' . caption
 		else
 			let caption = ''
@@ -252,6 +256,8 @@ endfunction
 function! s:svkFunctions.Update(argList)
 	return s:DoCommand('update', 'update', '', {})
 endfunction
+" Annotate setting {{{2
+let s:svkFunctions.AnnotateRevisionRegex = '\v^\s+\zs\d+'
 
 " Section: Plugin Registration {{{1
 let s:VCSCommandUtility = VCSCommandRegisterModule('SVK', expand('<sfile>'), s:svkFunctions, [])
