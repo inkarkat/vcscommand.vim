@@ -504,11 +504,21 @@ endfunction
 " Default method of generating the name for VCS result buffers.  This can be
 " overridden with the VCSResultBufferNameFunction variable.
 
+function! s:GetFileName(originalBuffer, statusText)
+	if match(a:statusText, '<VCSCOMMANDFILE:.*>') > 0
+		return [
+		\	substitute(a:statusText, '.*<VCSCOMMANDFILE:\(.*\)>.*', '\1', ''),
+		\	substitute(a:statusText, '<VCSCOMMANDFILE:.*>', '', '')
+		\]
+	else
+		return [bufname(a:originalBuffer), a:statusText]
+	endif
+endfunction
 function! s:GenerateResultBufferName(command, originalBuffer, vcsType, statusText)
-	let fileName = bufname(a:originalBuffer)
+	let [fileName, statusText] = s:GetFileName(a:originalBuffer, a:statusText)
 	let bufferName = a:vcsType . ' ' . a:command
-	if strlen(a:statusText) > 0
-		let bufferName .= ' ' . a:statusText
+	if strlen(statusText) > 0
+		let bufferName .= ' ' . statusText
 	endif
 	let bufferName .= ' ' . fileName
 	let counter = 0
@@ -525,10 +535,10 @@ endfunction
 " file name with the VCS type and command appended as extensions.
 
 function! s:GenerateResultBufferNameWithExtension(command, originalBuffer, vcsType, statusText)
-	let fileName = bufname(a:originalBuffer)
+	let [fileName, statusText] = s:GetFileName(a:originalBuffer, a:statusText)
 	let bufferName = a:vcsType . ' ' . a:command
-	if strlen(a:statusText) > 0
-		let bufferName .= ' ' . a:statusText
+	if strlen(statusText) > 0
+		let bufferName .= ' ' . statusText
 	endif
 	let bufferName .= ' ' . fileName . VCSCommandGetOption('VCSCommandResultBufferNameExtension', '.vcs')
 	let counter = 0
@@ -1285,6 +1295,8 @@ function! VCSCommandDoCommand(cmd, cmdName, statusText, options)
 
 	if match(cmd, '<VCSCOMMANDFILE>') > 0
 		let fullCmd = substitute(cmd, '<VCSCOMMANDFILE>', fileName, 'g')
+	elseif match(cmd, '<VCSCOMMANDFILE:.*>') > 0
+		let fullCmd = substitute(cmd, '<VCSCOMMANDFILE:\(.*\)>', '\=" -- " . shellescape(submatch(1))', '')
 	else
 		let fullCmd = cmd . ' -- ' . shellescape(fileName)
 	endif
@@ -1325,7 +1337,7 @@ function! VCSCommandDoCommand(cmd, cmdName, statusText, options)
 
 	silent 0put=output
 
-	call s:SetupScratchBuffer(a:cmdName, getbufvar(originalBuffer, 'VCSCommandVCSType'), originalBuffer, a:statusText)
+	call s:SetupScratchBuffer(a:cmdName, getbufvar(originalBuffer, 'VCSCommandVCSType'), originalBuffer, statusText)
 
 
 	" The last command left a blank line at the end of the buffer.  If the
