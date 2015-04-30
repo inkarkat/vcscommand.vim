@@ -851,7 +851,8 @@ function! s:VCSAnnotate(bang, ...)
 			endif
 			silent! wincmd J
 			leftabove vert new
-			setlocal scrollbind foldlevel=999
+			setlocal scrollbind foldlevel=999 nonumber
+			if exists('+relativenumber') | setlocal norelativenumber | endif
 
 			normal! 0P
 			execute "normal!" . (col('$') + (&number ? &numberwidth : 0)). "\<c-w>|"
