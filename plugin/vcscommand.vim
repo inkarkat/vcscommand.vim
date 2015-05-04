@@ -1114,7 +1114,7 @@ function! s:VCSVimDiff(...)
 
 					" This could have been invoked on a VCS result buffer, not the
 					" original buffer.
-					wincmd W
+					wincmd p
 					execute 'buffer' originalBuffer
 					" Store info for later original buffer restore
 					let t:vcsCommandVimDiffRestoreCmd =
@@ -1130,7 +1130,7 @@ function! s:VCSVimDiff(...)
 					endif
 					let t:vcsCommandVimDiffRestoreCmd .= '|if &foldmethod==''manual''|execute ''normal! zE''|endif'
 					diffthis
-					wincmd w
+					wincmd p
 				else
 					" Adding a window to an existing vimdiff
 					let t:vcsCommandVimDiffScratchList += [resultBuffer]
