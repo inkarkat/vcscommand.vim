@@ -793,6 +793,23 @@ function! s:VCSAnnotate(bang, ...)
 		let currentBuffer = bufnr('%')
 		let originalBuffer = VCSCommandGetOriginalBuffer(currentBuffer)
 
+		if ! isSplit && &modeline && &modelines > 0
+			" A modeline may set a filetype, but the extraction of the
+			" predecessor version (by the different VCS types) checks for the
+			" {TYPE}annotate filetype, so it must not be changed for further
+			" drill-down to work.
+			" The syntax highlighting that is enabled by a ft= / syntax=
+			" modeline usually is broken by the prepended annotations, anyway.
+			" As this buffer is only for browsing, not modifications, any other
+			" filetype settings do not make much sense, too.
+			" Therefore, suppress modelines for single-buffer annotations. As
+			" the annotate action opens a new (scratch) buffer, we have to
+			" globally disable modelines; just a :setlocal nomodeline wouldn't
+			" work.
+			let save_modelines = &modelines
+			set modelines=0
+		endif
+
 		let annotateBuffer = s:ExecuteVCSCommand('Annotate', a:000)
 		if annotateBuffer == -1
 			return -1
@@ -851,6 +868,9 @@ function! s:VCSAnnotate(bang, ...)
 		call s:ReportError(v:exception)
 		return -1
 	finally
+		if exists('save_modelines')
+			let &modelines = save_modelines
+		endif
 		call s:VCSCommandUtility.popContext()
 	endtry
 endfunction
