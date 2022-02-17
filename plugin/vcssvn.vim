@@ -113,12 +113,12 @@ endfunction
 function! s:svnFunctions.Annotate(argList)
 	if len(a:argList) == 0
 		if &filetype ==? 'svnannotate'
-			" Perform annotation of the predecessor of the version indicated by the current line.
+			" Perform annotation of [the predecessor of] the version indicated by the current line.
 			let rev = matchstr(getline('.'), s:svnFunctions.AnnotateRevisionRegex)
 			if rev < 1
 				throw 'No revision found in current line'
 			endif
-			let caption = rev - 1
+			let caption = VCSCommandGetOption('VCSAnnotateRepeatWithPredecessor', 1) ? rev - 1 : rev
 			let options = ' -r' . caption
 		else
 			let caption = ''

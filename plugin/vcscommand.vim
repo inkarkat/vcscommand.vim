@@ -264,6 +264,14 @@
 "   side-by-side.  If not set, it defaults to 'horizontal' for all but
 "   VCSVimDiff windows.
 "
+" VCSAnnotateRepeatWithPredecessor
+"   This flag, if true, annotates with the predecessor of the version indicated
+"   by the current line (instead of the version itself) when triggered in an
+"   annotated buffer. This allows for an easy drill-down into the change history
+"   of a file, and therefore is the buffer. Set to false (0) to obtain the
+"   original behavior, where the annotation uses the version by the current line
+"   itself.
+"
 " VCSCommandVCSTypeOverride
 "   This variable allows the VCS type detection to be overridden on a
 "   path-by-path basis.  The value of this variable is expected to be a List
