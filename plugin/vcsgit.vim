@@ -131,12 +131,12 @@ endfunction
 function! s:gitFunctions.Annotate(argList)
 	if len(a:argList) == 0
 		if &filetype == 'gitannotate'
-			" Perform annotation of the predecessor of the version indicated by the current line.
+			" Perform annotation of [the predecessor of] the version indicated by the current line.
 			let rev = matchstr(getline('.'), s:gitFunctions.AnnotateRevisionRegex)
 			if rev == ''
 				throw 'No revision found in current line'
 			endif
-			let options = s:PreviousRevision(rev)
+			let options = VCSCommandGetOption('VCSAnnotateRepeatWithPredecessor', 1) ? s:PreviousRevision(rev) : rev
 		else
 			let options = ''
 		endif
