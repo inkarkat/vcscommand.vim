@@ -279,7 +279,7 @@ endfunction
 
 " Annotate setting {{{2
 let s:gitFunctions.AnnotateSplitRegex = ') '
-let s:gitFunctions.AnnotateRevisionRegex = '^\x\+'
+let s:gitFunctions.AnnotateRevisionRegex = '^\S\+'
 
 " Section: Plugin Registration {{{1
 let s:VCSCommandUtility = VCSCommandRegisterModule('git', expand('<sfile>'), s:gitFunctions, [])
